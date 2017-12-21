@@ -5,7 +5,8 @@
              x:Class="AutoRPi.MainPage">
 
     <StackLayout x:Name="stackLayout">
-        <Button x:Name="b" Text="Hello, World!" Clicked="Clicked"/>
+        <Button x:Name="b" Text="Hello, World!" Clicked="bBtn_Clicked"/>
         <Entry Text="" x:Name="textBox"/>
+        <Button x:Name="sendBtn" Text="Send" Clicked="SendBtn_Clicked"/>
     </StackLayout>
 </ContentPage>

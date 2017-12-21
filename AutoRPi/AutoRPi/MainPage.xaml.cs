@@ -12,6 +12,7 @@ namespace AutoRPi
         TcpClient tcpClient;
         TcpListener tcpListener;
         IPEndPoint udpEnd, tcpEnd;
+        NetworkStream ns;
         int udpPort = 20253, tcpPort = 20254;
 
         public MainPage()
@@ -26,13 +27,13 @@ namespace AutoRPi
 
         void ScanForRPi()
         {
-            byte[] m = System.Text.Encoding.ASCII.GetBytes("rpi");
+            byte[] m = GetBytes("rpi");
             udp.Send(m, m.Length, udpEnd);
 
             string data = string.Empty;
             for (int i = 0; i < 5; i++)
             {
-                data = System.Text.Encoding.ASCII.GetString(udp.Receive(ref udpEnd));
+                data = GetString(udp.Receive(ref udpEnd));
                 if (data == "rpi")
                     continue;
                 else
@@ -47,12 +48,34 @@ namespace AutoRPi
             tcpListener.Stop();
 
             DisplayAlert("Connected", tcpEnd.ToString(), "OK");
-            tcpClient.GetStream().Write(m, 0, m.Length);
+            ns = tcpClient.GetStream();
         }
 
-        void Clicked(object sender, System.EventArgs e)
+        string GetString(byte[] bytes)
+        {
+            return System.Text.Encoding.ASCII.GetString(bytes);
+        }
+
+        byte[] GetBytes(string s)
+        {
+            return System.Text.Encoding.ASCII.GetBytes(s);
+        }
+
+        void bBtn_Clicked(object sender, System.EventArgs e)
         {
             ScanForRPi();
+        }
+
+        void SendBtn_Clicked(object sender, System.EventArgs e)
+        {
+            Send(textBox.Text);
+        }
+
+        void Send(string s)
+        {
+            byte[] b = GetBytes(s);
+            ns.Write(b, 0, b.Length);
+            ns.Flush();
         }
     }
 }

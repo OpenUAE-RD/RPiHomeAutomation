@@ -19,7 +19,9 @@
     <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Device.py" />
+    <Compile Include="Client.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="RPiProgram.py" />
   </ItemGroup>
   <ItemGroup>
