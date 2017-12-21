@@ -9,8 +9,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoRPi.iOS", "AutoRPi\Auto
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "AutoRPi", "AutoRPi\AutoRPi\AutoRPi.shproj", "{54B9F4FE-5BCE-4C94-B3AF-D1F68EF39DC8}"
 EndProject
-Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "RPiProgram", "RPiProgram\RPiProgram.pyproj", "{7F632FB0-EDB4-4B7F-881F-B536284D1A14}"
-EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		AutoRPi\AutoRPi\AutoRPi.projitems*{0274370a-a437-4337-95bf-5defe60cce2f}*SharedItemsImports = 4
@@ -88,18 +86,6 @@ Global
 		{6F6D0C1A-3052-43A9-B3DC-C67593358D9B}.Release|iPhone.Build.0 = Release|iPhone
 		{6F6D0C1A-3052-43A9-B3DC-C67593358D9B}.Release|iPhoneSimulator.ActiveCfg = Release|iPhoneSimulator
 		{6F6D0C1A-3052-43A9-B3DC-C67593358D9B}.Release|iPhoneSimulator.Build.0 = Release|iPhoneSimulator
-		{7F632FB0-EDB4-4B7F-881F-B536284D1A14}.Ad-Hoc|Any CPU.ActiveCfg = Release|Any CPU
-		{7F632FB0-EDB4-4B7F-881F-B536284D1A14}.Ad-Hoc|iPhone.ActiveCfg = Release|Any CPU
-		{7F632FB0-EDB4-4B7F-881F-B536284D1A14}.Ad-Hoc|iPhoneSimulator.ActiveCfg = Release|Any CPU
-		{7F632FB0-EDB4-4B7F-881F-B536284D1A14}.AppStore|Any CPU.ActiveCfg = Release|Any CPU
-		{7F632FB0-EDB4-4B7F-881F-B536284D1A14}.AppStore|iPhone.ActiveCfg = Release|Any CPU
-		{7F632FB0-EDB4-4B7F-881F-B536284D1A14}.AppStore|iPhoneSimulator.ActiveCfg = Release|Any CPU
-		{7F632FB0-EDB4-4B7F-881F-B536284D1A14}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7F632FB0-EDB4-4B7F-881F-B536284D1A14}.Debug|iPhone.ActiveCfg = Debug|Any CPU
-		{7F632FB0-EDB4-4B7F-881F-B536284D1A14}.Debug|iPhoneSimulator.ActiveCfg = Debug|Any CPU
-		{7F632FB0-EDB4-4B7F-881F-B536284D1A14}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7F632FB0-EDB4-4B7F-881F-B536284D1A14}.Release|iPhone.ActiveCfg = Release|Any CPU
-		{7F632FB0-EDB4-4B7F-881F-B536284D1A14}.Release|iPhoneSimulator.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

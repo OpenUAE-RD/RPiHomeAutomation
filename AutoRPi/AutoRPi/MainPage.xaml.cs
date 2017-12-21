@@ -21,7 +21,6 @@ namespace AutoRPi
             udpEnd = new IPEndPoint(IPAddress.Broadcast, udpPort);
             tcpEnd = new IPEndPoint(IPAddress.Any, tcpPort);
             udp = new UdpClient(udpPort, AddressFamily.InterNetwork);
-            tcpListener = new TcpListener(IPAddress.Any, tcpPort);
 
         }
 
@@ -29,12 +28,26 @@ namespace AutoRPi
         {
             byte[] m = System.Text.Encoding.ASCII.GetBytes("rpi");
             udp.Send(m, m.Length, udpEnd);
+
+            string data = string.Empty;
+            for (int i = 0; i < 5; i++)
+            {
+                data = System.Text.Encoding.ASCII.GetString(udp.Receive(ref udpEnd));
+                if (data == "rpi")
+                    continue;
+                else
+                    break;
+            }
+
+            int port = int.Parse(data);
+
+            tcpListener = new TcpListener(IPAddress.Any, port);
             tcpListener.Start();
             tcpClient = tcpListener.AcceptTcpClient();
             tcpListener.Stop();
 
-            b.Text = tcpClient.Connected.ToString();
-            DisplayAlert("Connection", tcpEnd.ToString(), "OK");
+            DisplayAlert("Connected", tcpEnd.ToString(), "OK");
+            tcpClient.GetStream().Write(m, 0, m.Length);
         }
 
         void Clicked(object sender, System.EventArgs e)
