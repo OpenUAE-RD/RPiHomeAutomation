@@ -16,6 +16,22 @@ class Client (object):
         #Handle communication on separate thread
         threading._start_new_thread(self.HandleConnection, ())
 
+    def __del__(self):
+        self.sock.close() #Make sure to close the socket just in case
+
+    def EstablishConnection(self):
+        """Tries to connect to client and returns whether it was successful."""
+
+        self.sock.settimeout(2) #Wait 5 seconds before stopping
+        try:
+            self.sock.listen(1)
+            self.sock = self.sock.accept()[0] #Get the new socket to talk on
+        except socket.error as err:
+            print("Connection Error: " + str(err))
+            return False
+
+        return True
+
     def CloseConnection(self):
         self.sock.close()
         self.done = True
@@ -25,23 +41,12 @@ class Client (object):
         print("ASDASD")
 
     def HandleConnection(self):
-    
-        port = self.sock.getsockname()[1]
-        self.sock.settimeout(5) #Wait 5 seconds before stopping
-        print("Connecting to '" + self.ip + "'" + "on port: " + str(port))
-
-        #Give time for other side to open port (max wait=2s)
-        for i in range(0, 8):
-            error = self.sock.connect_ex((self.ip, port))
-            if not error or error != 111: break
-            sleep(0.25)
-
-        if error:
-            print('Connection timed out or Error. Terminating. TCP Error: ' + str(error))
+        print("Waiting for '" + self.ip + "'" + " to connect...")
+        if not self.EstablishConnection():
             self.sock.close()
             return
-    
-        print("Connection to '" + self.ip + "' established.")
+        print("Connection to '" + self.ip + "' established on port: " + str(self.sock.getsockname()[1]))
+        
         self.sock.settimeout(None)
         while not self.done:
             cmd = self.sock.recv(1024)

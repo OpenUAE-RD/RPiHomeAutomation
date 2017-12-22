@@ -4,9 +4,18 @@
              xmlns:local="clr-namespace:AutoRPi"
              x:Class="AutoRPi.MainPage">
 
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Add Device" Order="Secondary"/>
+        <ToolbarItem Text="About" Order="Secondary"/>
+    </ContentPage.ToolbarItems>
+    
     <StackLayout x:Name="stackLayout">
-        <Button x:Name="b" Text="Hello, World!" Clicked="bBtn_Clicked"/>
-        <Entry Text="" x:Name="textBox"/>
+        
+        <StackLayout Orientation="Horizontal">
+        <Entry Text="" x:Name="rpiNameEntry" HorizontalOptions="FillAndExpand"/>
+        <Button x:Name="connectBtn" Text="Connect" HorizontalOptions="FillAndExpand" BackgroundColor="LightGreen" Clicked="connectBtn_Clicked"/>
+        </StackLayout>
+        
         <Button x:Name="sendBtn" Text="Send" Clicked="SendBtn_Clicked"/>
     </StackLayout>
 </ContentPage>

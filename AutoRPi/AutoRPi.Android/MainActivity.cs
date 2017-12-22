@@ -24,4 +24,3 @@ namespace AutoRPi.Droid
         }
     }
 }
-

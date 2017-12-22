@@ -10,9 +10,9 @@ namespace AutoRPi
     {
         UdpClient udp;
         TcpClient tcpClient;
-        TcpListener tcpListener;
         IPEndPoint udpEnd, tcpEnd;
         NetworkStream ns;
+        IPAddress[] localIps;
         int udpPort = 20253, tcpPort = 20254;
 
         public MainPage()
@@ -22,33 +22,68 @@ namespace AutoRPi
             udpEnd = new IPEndPoint(IPAddress.Broadcast, udpPort);
             tcpEnd = new IPEndPoint(IPAddress.Any, tcpPort);
             udp = new UdpClient(udpPort, AddressFamily.InterNetwork);
+            localIps = Dns.GetHostAddresses(Dns.GetHostName());
+        }
 
+        bool IsOwnIp(IPAddress ip)
+        {
+            foreach (var i in localIps)
+            {
+                if (i.Equals(ip))
+                    return true;
+            }
+
+            return false;
         }
 
         void ScanForRPi()
         {
             byte[] m = GetBytes("rpi");
-            udp.Send(m, m.Length, udpEnd);
-
-            string data = string.Empty;
-            for (int i = 0; i < 5; i++)
+            for (int tries = 0; tries < 3; tries++)
             {
-                data = GetString(udp.Receive(ref udpEnd));
-                if (data == "rpi")
+                //Send broadcast
+                udp.Send(m, m.Length, udpEnd);
+
+                //Try to get a port response
+                string data = string.Empty;
+                bool gotReply = false;
+                for (int i = 0; i < 5; i++)
+                {
+                    var udpAsync = udp.BeginReceive(null, null);
+                    if (udpAsync.AsyncWaitHandle.WaitOne(200, false))
+                    {
+                        //Ignore own broadcast
+                        data = GetString(udp.EndReceive(udpAsync, ref tcpEnd));
+                        if (IsOwnIp(tcpEnd.Address))
+                        {
+                            continue;
+                        }
+
+                        gotReply = true;
+                        break;
+                    }
+                }
+
+                if (!gotReply)
                     continue;
-                else
-                    break;
+                if (tcpClient != null && tcpClient.Connected)
+                    tcpClient.Close();
+
+                //Try to connect
+                int port = int.Parse(data);
+                tcpClient = new TcpClient();
+                System.IAsyncResult tcpAsync = tcpClient.BeginConnect(tcpEnd.Address, port, null, null);
+                if (!tcpAsync.AsyncWaitHandle.WaitOne(250, false))
+                    continue;
+
+                tcpClient.EndConnect(tcpAsync);
+                ns = tcpClient.GetStream();
+                ns.WriteTimeout = 2;
+                DisplayAlert("Connected", tcpEnd.ToString(), "OK");
+                return;
             }
 
-            int port = int.Parse(data);
-
-            tcpListener = new TcpListener(IPAddress.Any, port);
-            tcpListener.Start();
-            tcpClient = tcpListener.AcceptTcpClient();
-            tcpListener.Stop();
-
-            DisplayAlert("Connected", tcpEnd.ToString(), "OK");
-            ns = tcpClient.GetStream();
+            DisplayAlert($"Failed to connect", "Could not connect to 'rpi'", "OK");
         }
 
         string GetString(byte[] bytes)
@@ -61,20 +96,39 @@ namespace AutoRPi
             return System.Text.Encoding.ASCII.GetBytes(s);
         }
 
-        void bBtn_Clicked(object sender, System.EventArgs e)
+        void connectBtn_Clicked(object sender, System.EventArgs e)
         {
             ScanForRPi();
         }
 
         void SendBtn_Clicked(object sender, System.EventArgs e)
         {
-            Send(textBox.Text);
+            Send(rpiNameEntry.Text);
+        }
+
+        void UpdateConnectionStatus()
+        {
+            //TODO: Handle dropped connection
         }
 
         void Send(string s)
         {
+            if (tcpClient == null || !tcpClient.Connected)
+                return;
+
             byte[] b = GetBytes(s);
-            ns.Write(b, 0, b.Length);
+
+            try
+            {
+                ns.Write(b, 0, b.Length);
+            }
+
+            catch (System.Exception)
+            {
+                UpdateConnectionStatus();
+                return;
+            }
+
             ns.Flush();
         }
     }
