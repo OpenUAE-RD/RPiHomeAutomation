@@ -17,6 +17,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)AddDevicePg.xaml.cs">
       <DependentUpon>AddDevicePg.xaml</DependentUpon>
     </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)AddRPiPg.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
@@ -24,5 +25,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)RPiCommands.cs" />
   </ItemGroup>
 </Project>

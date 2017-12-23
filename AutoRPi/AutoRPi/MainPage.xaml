@@ -5,18 +5,18 @@
              x:Class="AutoRPi.MainPage">
 
     <ContentPage.ToolbarItems>
-        <ToolbarItem Text="Add Device" Order="Secondary" Clicked="AddDevice_Clicked"/>
-        <ToolbarItem Text="About" Order="Secondary" Clicked="About_Clicked"/>
+        <ToolbarItem Text="Add Raspberry Pi" Order="Secondary" Clicked="AddRPiClicked"/>
+        <ToolbarItem Text="Add Device" Order="Secondary" Clicked="AddDeviceClicked"/>
+        <ToolbarItem Text="About" Order="Secondary" Clicked="AboutClicked"/>
     </ContentPage.ToolbarItems>
 
     <ScrollView>
         <StackLayout x:Name="stackLayout" Orientation="Vertical">
+            <Label x:Name="connectionLabel" Text="Not Connected" TextColor="Red"/>
             <StackLayout Orientation="Horizontal">
-                <Entry Placeholder="RPi Name" PlaceholderColor="LightGray" Text="" x:Name="rpiNameEntry" HorizontalOptions="FillAndExpand"/>
+                <Picker x:Name="rpiPicker" HorizontalOptions="FillAndExpand" Title="Select RPi"/>
                 <Button x:Name="connectBtn" Text="Connect" HorizontalOptions="FillAndExpand" BackgroundColor="LightGreen" Clicked="ConnectBtn_Clicked"/>
             </StackLayout>
-
-            <Button x:Name="sendBtn" Text="Send" Clicked="SendBtn_Clicked"/>
         </StackLayout>
     </ScrollView>
 </ContentPage>

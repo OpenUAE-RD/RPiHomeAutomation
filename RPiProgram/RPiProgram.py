@@ -12,7 +12,7 @@ udp.bind(('', udp_port))
 while True:
     data, addr = udp.recvfrom(1024)
     data = data.decode('ascii')
-    print("\nGot: " + data + " from " + str(addr))
+    print("\nGot: '" + data + "' from " + str(addr))
     
     #If device wants to connect to us
     if 'rpi' == data:

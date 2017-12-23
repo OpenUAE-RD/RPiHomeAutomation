@@ -22,7 +22,7 @@ class Client (object):
     def EstablishConnection(self):
         """Tries to connect to client and returns whether it was successful."""
 
-        self.sock.settimeout(2) #Wait 5 seconds before stopping
+        self.sock.settimeout(2)
         try:
             self.sock.listen(1)
             self.sock = self.sock.accept()[0] #Get the new socket to talk on

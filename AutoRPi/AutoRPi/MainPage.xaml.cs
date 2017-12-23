@@ -12,16 +12,21 @@ namespace AutoRPi
         IPEndPoint udpEnd, tcpEnd;
         NetworkStream ns;
         IPAddress[] localIps;
-        int udpPort = 20253, tcpPort = 20254;
+        int udpPort = 20253;
+
+        string connectedRPi = string.Empty;
 
         public MainPage()
         {
             InitializeComponent();
 
             udpEnd = new IPEndPoint(IPAddress.Broadcast, udpPort);
-            tcpEnd = new IPEndPoint(IPAddress.Any, tcpPort);
-            udp = new UdpClient(udpPort, AddressFamily.InterNetwork);
+            tcpEnd = new IPEndPoint(IPAddress.Any, 0);
             localIps = Dns.GetHostAddresses(Dns.GetHostName());
+
+            rpiPicker.SelectedItem = null;
+            rpiPicker.Items.Add("y tho");
+            rpiPicker.Items.Add("rpi");
         }
 
         bool IsOwnIp(IPAddress ip)
@@ -35,28 +40,40 @@ namespace AutoRPi
             return false;
         }
 
-        void ScanForRPi()
+        void ConnectToRPi()
         {
-            byte[] m = GetBytes("rpi");
+            //HACK: For some reason if this is not done udp will not receive after first connection
+            if (udp != null)
+                udp.Close();
+            udp = new UdpClient(udpPort, AddressFamily.InterNetwork);
+
+            string rpiName = rpiPicker.SelectedItem.ToString();
+            byte[] m = GetBytes(rpiName);
             for (int tries = 0; tries < 3; tries++)
             {
                 //Send broadcast
-                udp.Send(m, m.Length, udpEnd);
+                try
+                {
+                    udp.Send(m, m.Length, udpEnd);
+                }
+
+                catch (System.Exception)
+                {
+                    break;
+                }
 
                 //Try to get a port response
                 string data = string.Empty;
                 bool gotReply = false;
-                for (int i = 0; i < 5; i++)
+                for (int i = 0; i < 7; i++)
                 {
                     var udpAsync = udp.BeginReceive(null, null);
-                    if (udpAsync.AsyncWaitHandle.WaitOne(200, false))
+                    if (udpAsync.AsyncWaitHandle.WaitOne(250, false))
                     {
-                        //Ignore own broadcast
+                        //Ignore own broadcast by checking IP of packet
                         data = GetString(udp.EndReceive(udpAsync, ref tcpEnd));
                         if (IsOwnIp(tcpEnd.Address))
-                        {
                             continue;
-                        }
 
                         gotReply = true;
                         break;
@@ -65,24 +82,33 @@ namespace AutoRPi
 
                 if (!gotReply)
                     continue;
-                if (tcpClient != null && tcpClient.Connected)
-                    tcpClient.Close();
 
                 //Try to connect
-                int port = int.Parse(data);
+                tcpEnd.Port = int.Parse(data);
                 tcpClient = new TcpClient();
-                System.IAsyncResult tcpAsync = tcpClient.BeginConnect(tcpEnd.Address, port, null, null);
+                System.IAsyncResult tcpAsync = tcpClient.BeginConnect(tcpEnd.Address, tcpEnd.Port, null, null);
                 if (!tcpAsync.AsyncWaitHandle.WaitOne(250, false))
                     continue;
 
                 tcpClient.EndConnect(tcpAsync);
+
                 ns = tcpClient.GetStream();
                 ns.WriteTimeout = 2;
+
+                connectedRPi = rpiName;
+                UpdateConnectionStatus();
                 DisplayAlert("Connected", tcpEnd.ToString(), "OK");
                 return;
             }
 
-            DisplayAlert($"Failed to connect", "Could not connect to 'rpi'", "OK");
+            connectedRPi = string.Empty;
+            UpdateConnectionStatus();
+            DisplayAlert($"Failed to connect", $"Could not connect to '{rpiName}'", "OK");
+        }
+
+        void Send(RPiCmds cmd)
+        {
+            Send(((int)cmd).ToString());
         }
 
         void Send(string s)
@@ -99,6 +125,7 @@ namespace AutoRPi
 
             catch (System.Exception)
             {
+                connectedRPi = string.Empty;
                 UpdateConnectionStatus();
                 return;
             }
@@ -108,7 +135,17 @@ namespace AutoRPi
 
         void UpdateConnectionStatus()
         {
-            //TODO: Handle dropped connection
+            if (connectedRPi == string.Empty)
+            {
+                connectionLabel.Text = "Not Connected";
+                connectionLabel.TextColor = Color.Red;
+            }
+
+            else
+            {
+                connectionLabel.Text = $"Connected to '{connectedRPi}'";
+                connectionLabel.TextColor = Color.Green;
+            }
         }
 
         string GetString(byte[] bytes)
@@ -124,19 +161,24 @@ namespace AutoRPi
         #region Click events
         void ConnectBtn_Clicked(object sender, System.EventArgs e)
         {
-            ScanForRPi();
+            //Ignore if trying to connect current rpi
+            if (rpiPicker.SelectedItem == null || connectedRPi == rpiPicker.SelectedItem.ToString())
+                return;
+
+            if (tcpClient != null && tcpClient.Connected)
+            {
+                Send(RPiCmds.ClosePort);
+                tcpClient.Close();
+            }
+
+            ConnectToRPi();
         }
 
-        void SendBtn_Clicked(object sender, System.EventArgs e)
-        {
-            Send(rpiNameEntry.Text);
-        }
-
-        void AddDevice_Clicked(object sender, System.EventArgs e)
+        void AddDeviceClicked(object sender, System.EventArgs e)
         {
             var a = new AddDevicePg();
             a.Disappearing += AddDevicePgDisappearing;
-            Navigation.PushAsync(a);
+            Navigation.PushAsync(a, true);
         }
 
         void AddDevicePgDisappearing(object sender, System.EventArgs e)
@@ -147,15 +189,21 @@ namespace AutoRPi
                 AddDevice(adp.GetDeviceName(), adp.GetPin());
         }
 
-        void About_Clicked(object sender, System.EventArgs e)
+        void AddRPiClicked(object sender, System.EventArgs e)
         {
-
+            AddRPiPg arp = new AddRPiPg();
+            arp.rpiAddedCallback = AddRPiName;
+            Navigation.PushAsync(arp, true);
         }
-        #endregion
 
-        void AddDevice(string name, int pin)
+        void AddRPiName(string name)
         {
-            stackLayout.Children.Add(new DeviceContentView(name, pin, this));
+            rpiPicker.Items.Add(name);
+        }
+
+        void AboutClicked(object sender, System.EventArgs e)
+        {
+
         }
 
         public void SwitchToggled(int pin, bool on)
@@ -167,14 +215,20 @@ namespace AutoRPi
             Send(cmd);
         }
 
-        public void EditClicked(string name, int pin, DeviceContentView dcv)
+        public void EditBtnClicked(string name, int pin, DeviceContentView dcv)
         {
-            Navigation.PushAsync(new AddDevicePg(name, pin, dcv));
+            Navigation.PushAsync(new AddDevicePg(name, pin, dcv), true);
         }
 
-        public void DeleteClicked(DeviceContentView dcv)
+        public void DeleteBtnClicked(DeviceContentView dcv)
         {
             stackLayout.Children.Remove(dcv);
+        }
+        #endregion
+
+        void AddDevice(string name, int pin)
+        {
+            stackLayout.Children.Add(new DeviceContentView(name, pin, this));
         }
     }
 }

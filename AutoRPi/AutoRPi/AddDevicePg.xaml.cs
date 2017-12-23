@@ -57,7 +57,7 @@ namespace AutoRPi
             if (dcv != null && startName != GetDeviceName() && startPin != GetPin())
                 dcv.Update(GetDeviceName(), GetPin());
 
-            Navigation.PopAsync();
+            Navigation.PopAsync(true);
         }
 
         public bool WasSuccessful()

@@ -36,12 +36,12 @@ namespace AutoRPi
 
         void EditClicked(object sender, System.EventArgs e)
         {
-            mainPg.EditClicked(name, pin, this);
+            mainPg.EditBtnClicked(name, pin, this);
         }
 
         void DeleteClicked(object sender, System.EventArgs e)
         {
-            mainPg.DeleteClicked(this);
+            mainPg.DeleteBtnClicked(this);
         }
 
         public void Update(string name, int pin)
