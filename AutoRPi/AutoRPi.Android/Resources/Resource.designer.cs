@@ -2781,9 +2781,6 @@ namespace AutoRPi.Droid
 		public partial class Id
 		{
 			
-			// aapt resource value: 0x7f0800b6
-			public const int AddDevice = 2131230902;
-			
 			// aapt resource value: 0x7f08009e
 			public const int action0 = 2131230878;
 			
@@ -3621,22 +3618,6 @@ namespace AutoRPi.Droid
 			}
 			
 			private Layout()
-			{
-			}
-		}
-		
-		public partial class Menu
-		{
-			
-			// aapt resource value: 0x7f0e0000
-			public const int MainMenu = 2131623936;
-			
-			static Menu()
-			{
-				global::Android.Runtime.ResourceIdManager.UpdateIdValues();
-			}
-			
-			private Menu()
 			{
 			}
 		}

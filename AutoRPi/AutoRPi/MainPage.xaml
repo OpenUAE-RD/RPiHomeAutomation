@@ -5,15 +5,15 @@
              x:Class="AutoRPi.MainPage">
 
     <ContentPage.ToolbarItems>
-        <ToolbarItem Text="Add Device" Order="Secondary"/>
-        <ToolbarItem Text="About" Order="Secondary"/>
+        <ToolbarItem Text="Add Device" Order="Secondary" Clicked="AddDevice_Clicked"/>
+        <ToolbarItem Text="About" Order="Secondary" Clicked="About_Clicked"/>
     </ContentPage.ToolbarItems>
     
     <StackLayout x:Name="stackLayout">
         
         <StackLayout Orientation="Horizontal">
-        <Entry Text="" x:Name="rpiNameEntry" HorizontalOptions="FillAndExpand"/>
-        <Button x:Name="connectBtn" Text="Connect" HorizontalOptions="FillAndExpand" BackgroundColor="LightGreen" Clicked="connectBtn_Clicked"/>
+        <Entry Placeholder="RPi Name" Text="" x:Name="rpiNameEntry" HorizontalOptions="FillAndExpand"/>
+        <Button x:Name="connectBtn" Text="Connect" HorizontalOptions="FillAndExpand" BackgroundColor="LightGreen" Clicked="ConnectBtn_Clicked"/>
         </StackLayout>
         
         <Button x:Name="sendBtn" Text="Send" Clicked="SendBtn_Clicked"/>

@@ -1,8 +1,6 @@
-﻿using System.Collections.Generic;
-using Xamarin.Forms;
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
-using System.Net.NetworkInformation;
+using Xamarin.Forms;
 
 namespace AutoRPi
 {
@@ -86,31 +84,6 @@ namespace AutoRPi
             DisplayAlert($"Failed to connect", "Could not connect to 'rpi'", "OK");
         }
 
-        string GetString(byte[] bytes)
-        {
-            return System.Text.Encoding.ASCII.GetString(bytes);
-        }
-
-        byte[] GetBytes(string s)
-        {
-            return System.Text.Encoding.ASCII.GetBytes(s);
-        }
-
-        void connectBtn_Clicked(object sender, System.EventArgs e)
-        {
-            ScanForRPi();
-        }
-
-        void SendBtn_Clicked(object sender, System.EventArgs e)
-        {
-            Send(rpiNameEntry.Text);
-        }
-
-        void UpdateConnectionStatus()
-        {
-            //TODO: Handle dropped connection
-        }
-
         void Send(string s)
         {
             if (tcpClient == null || !tcpClient.Connected)
@@ -130,6 +103,58 @@ namespace AutoRPi
             }
 
             ns.Flush();
+        }
+
+        void UpdateConnectionStatus()
+        {
+            //TODO: Handle dropped connection
+        }
+
+        string GetString(byte[] bytes)
+        {
+            return System.Text.Encoding.ASCII.GetString(bytes);
+        }
+
+        byte[] GetBytes(string s)
+        {
+            return System.Text.Encoding.ASCII.GetBytes(s);
+        }
+
+        #region Click events
+        void ConnectBtn_Clicked(object sender, System.EventArgs e)
+        {
+            ScanForRPi();
+        }
+
+        void SendBtn_Clicked(object sender, System.EventArgs e)
+        {
+            Send(rpiNameEntry.Text);
+        }
+
+        void AddDevice_Clicked(object sender, System.EventArgs e)
+        {
+            var a = new AddDevicePg();
+            a.Disappearing += AddDevicePgDisappearing;
+            Navigation.PushAsync(a);
+        }
+
+        void AddDevicePgDisappearing(object sender, System.EventArgs e)
+        {
+            AddDevicePg adp = (AddDevicePg)sender;
+
+            if (adp.WasSuccessful())
+                AddDevice(adp.GetDeviceName(), adp.GetPin());
+        }
+
+        void About_Clicked(object sender, System.EventArgs e)
+        {
+
+        }
+        #endregion
+
+        void AddDevice(string name, int pin)
+        {
+            //stackLayout.Children.Insert(stackLayout.Children.Count - 1, );
         }
     }
 }

@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AutoRPi.AddDevicePg">
+
+    <ContentPage.Content>
+        <StackLayout Orientation="Vertical">
+
+            <Entry x:Name="deviceNameEntry" Text="" Placeholder="Device Name" HorizontalOptions="FillAndExpand"/>
+            <Picker x:Name="picker" Title="GPIO Pin" HorizontalOptions="FillAndExpand"/>
+            <Button Text="Add Device" BackgroundColor="LightGreen" HorizontalOptions="FillAndExpand" Clicked="AddDeviceBtn_Clicked"/>
+        </StackLayout>
+    </ContentPage.Content>
+</ContentPage>
