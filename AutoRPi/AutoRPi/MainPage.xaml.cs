@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Net.Sockets;
+using System.Collections.Generic;
 using Xamarin.Forms;
 
 namespace AutoRPi
@@ -154,7 +155,26 @@ namespace AutoRPi
 
         void AddDevice(string name, int pin)
         {
-            //stackLayout.Children.Insert(stackLayout.Children.Count - 1, );
+            stackLayout.Children.Add(new DeviceContentView(name, pin, this));
+        }
+
+        public void SwitchToggled(int pin, bool on)
+        {
+            string cmd = pin + (on ? "1" : "0");
+            if (cmd.Length < 3)
+                cmd.Insert(0, "0");
+
+            Send(cmd);
+        }
+
+        public void EditClicked(string name, int pin, DeviceContentView dcv)
+        {
+            Navigation.PushAsync(new AddDevicePg(name, pin, dcv));
+        }
+
+        public void DeleteClicked(DeviceContentView dcv)
+        {
+            stackLayout.Children.Remove(dcv);
         }
     }
 }

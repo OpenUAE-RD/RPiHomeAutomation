@@ -8,14 +8,15 @@
         <ToolbarItem Text="Add Device" Order="Secondary" Clicked="AddDevice_Clicked"/>
         <ToolbarItem Text="About" Order="Secondary" Clicked="About_Clicked"/>
     </ContentPage.ToolbarItems>
-    
-    <StackLayout x:Name="stackLayout">
-        
-        <StackLayout Orientation="Horizontal">
-        <Entry Placeholder="RPi Name" Text="" x:Name="rpiNameEntry" HorizontalOptions="FillAndExpand"/>
-        <Button x:Name="connectBtn" Text="Connect" HorizontalOptions="FillAndExpand" BackgroundColor="LightGreen" Clicked="ConnectBtn_Clicked"/>
+
+    <ScrollView>
+        <StackLayout x:Name="stackLayout" Orientation="Vertical">
+            <StackLayout Orientation="Horizontal">
+                <Entry Placeholder="RPi Name" PlaceholderColor="LightGray" Text="" x:Name="rpiNameEntry" HorizontalOptions="FillAndExpand"/>
+                <Button x:Name="connectBtn" Text="Connect" HorizontalOptions="FillAndExpand" BackgroundColor="LightGreen" Clicked="ConnectBtn_Clicked"/>
+            </StackLayout>
+
+            <Button x:Name="sendBtn" Text="Send" Clicked="SendBtn_Clicked"/>
         </StackLayout>
-        
-        <Button x:Name="sendBtn" Text="Send" Clicked="SendBtn_Clicked"/>
-    </StackLayout>
+    </ScrollView>
 </ContentPage>

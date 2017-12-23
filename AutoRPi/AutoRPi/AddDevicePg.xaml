@@ -5,9 +5,8 @@
 
     <ContentPage.Content>
         <StackLayout Orientation="Vertical">
-
-            <Entry x:Name="deviceNameEntry" Text="" Placeholder="Device Name" HorizontalOptions="FillAndExpand"/>
-            <Picker x:Name="picker" Title="GPIO Pin" HorizontalOptions="FillAndExpand"/>
+            <Entry x:Name="deviceNameEntry" Text="RPi" Placeholder="Device Name" PlaceholderColor="LightGray" HorizontalOptions="FillAndExpand"/>
+            <Picker x:Name="picker" TextColor="Black" Title="Select GPIO Pin" HorizontalOptions="FillAndExpand"/>
             <Button Text="Add Device" BackgroundColor="LightGreen" HorizontalOptions="FillAndExpand" Clicked="AddDeviceBtn_Clicked"/>
         </StackLayout>
     </ContentPage.Content>
