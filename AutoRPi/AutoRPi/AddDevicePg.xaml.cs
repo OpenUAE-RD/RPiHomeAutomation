@@ -33,7 +33,9 @@ namespace AutoRPi
 
             //Fill with GPIO pin numbers
             picker.ItemsSource = new int[] { 3, 5, 7, 11, 13, 15, 19, 21, 23, 29, 31, 33, 35, 37, 8, 10, 12, 16, 18, 22, 24, 26, 32, 36, 38, 40 };
-            picker.SelectedIndex = pin <= -1 ? -1 : pin - 1;
+
+            if (pin != -1)
+                picker.SelectedItem = pin;
             btn.Text = dcv == null ? btn.Text : "Update Device";
         }
 
@@ -75,7 +77,7 @@ namespace AutoRPi
 
         public int GetPin()
         {
-            return (int)picker.ItemsSource[picker.SelectedIndex];
+            return int.Parse(picker.SelectedItem.ToString());
         }
     }
 }

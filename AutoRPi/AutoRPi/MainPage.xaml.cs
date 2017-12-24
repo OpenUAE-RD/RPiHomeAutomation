@@ -8,7 +8,6 @@ namespace AutoRPi
 {
     public partial class MainPage : ContentPage
     {
-        //TODO: Cleanup the way commands are handled
         UdpClient udp;
         TcpClient tcpClient;
         IPEndPoint udpEnd, tcpEnd;
@@ -21,6 +20,7 @@ namespace AutoRPi
         const string ext = ".rha";
         const int deviceContentOffset = 2;
         string connectedRPi = string.Empty;
+        bool resumingApp;
 
         public MainPage()
         {
@@ -111,14 +111,39 @@ namespace AutoRPi
 
                 connectedRPi = rpiName;
                 SetConnectionLabel($"Connected to '{connectedRPi}'", connectedColor);
-                DisplayAlert("Connected", $"Sucessfully connected to '{rpiName}'", "OK");
+
+                if (!resumingApp)
+                    DisplayAlert("Connected", $"Sucessfully connected to '{rpiName}'", "OK");
+                else
+                    resumingApp = false;
+
                 return true;
             }
 
             connectedRPi = string.Empty;
             SetConnectionLabel("Not Connected", disconnectedColor);
-            DisplayAlert($"Failed to connect", $"Could not connect to '{rpiName}'", "OK");
+
+            if (!resumingApp)
+                DisplayAlert($"Failed to connect", $"Could not connect to '{rpiName}'", "OK");
+            else
+                resumingApp = false;
+
             return false;
+        }
+
+        public void AppResumed()
+        {
+            //Appearing with something selected means we are resuming the app so reconnect
+            if (rpiPicker.SelectedItem != null && connectedRPi != string.Empty && rpiPicker.SelectedItem.ToString() == connectedRPi)
+            {
+                resumingApp = true;
+                ConnectBtnClicked(null, null);
+            }
+        }
+
+        public void AppClosed()
+        {
+            CloseConnection();
         }
 
         void Send(RPiCmds cmd)
@@ -234,10 +259,7 @@ namespace AutoRPi
                 rpiPicker.SelectedItem = null;
                 rpiPicker.Items.RemoveAt(i);
 
-                Send(RPiCmds.ClosePort);
-                if (tcpClient != null)
-                    tcpClient.Close();
-                SetConnectionLabel("Not Connected", Color.Red);
+                CloseConnection();
             }
         }
 
@@ -251,7 +273,7 @@ namespace AutoRPi
         void ConnectBtnClicked(object sender, System.EventArgs e)
         {
             //Ignore if trying to connect current rpi
-            if (rpiPicker.SelectedItem == null || connectedRPi == rpiPicker.SelectedItem.ToString())
+            if (rpiPicker.SelectedItem == null || (!resumingApp && connectedRPi == rpiPicker.SelectedItem.ToString()))
                 return;
 
             if (tcpClient != null && tcpClient.Connected)
@@ -317,6 +339,14 @@ namespace AutoRPi
             Save();
         }
         #endregion
+
+        void CloseConnection()
+        {
+            Send(RPiCmds.ClosePort);
+            if (tcpClient != null)
+                tcpClient.Close();
+            SetConnectionLabel("Not Connected", Color.Red);
+        }
 
         /// <summary>
         /// Handles adding a RPi or changing its name

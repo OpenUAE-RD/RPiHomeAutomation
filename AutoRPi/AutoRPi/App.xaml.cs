@@ -9,11 +9,14 @@ namespace AutoRPi
 {
     public partial class App : Application
     {
+        MainPage mainpg;
+
         public App()
         {
             InitializeComponent();
 
-            MainPage = new NavigationPage(new MainPage()) { BarBackgroundColor = Color.DarkSlateBlue};
+            mainpg = new MainPage();
+            MainPage = new NavigationPage(mainpg) { BarBackgroundColor = Color.DarkSlateBlue};
         }
 
         protected override void OnStart()
@@ -23,12 +26,12 @@ namespace AutoRPi
 
         protected override void OnSleep()
         {
-            // Handle when your app sleeps
+            mainpg.AppClosed();
         }
 
         protected override void OnResume()
         {
-            // Handle when your app resumes
+            mainpg.AppResumed();
         }
     }
 }
