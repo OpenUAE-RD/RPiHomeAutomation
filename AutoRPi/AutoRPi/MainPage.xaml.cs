@@ -32,8 +32,6 @@ namespace AutoRPi
 
             rpiPicker.SelectedItem = null;
             PopulateRPiPicker();
-            //rpiPicker.Items.Add("y tho");
-            //rpiPicker.Items.Add("rpi");
         }
 
         bool IsOwnIp(IPAddress ip)
@@ -47,8 +45,15 @@ namespace AutoRPi
             return false;
         }
 
-        void ConnectToRPi()
+        /// <summary>
+        /// Tries to connect to the current RPi and returns whether it was sucessful
+        /// </summary>
+        /// <returns></returns>
+        bool ConnectToRPi()
         {
+            if (rpiPicker.SelectedItem == null)
+                return false;
+
             //HACK: For some reason if this is not done udp will not receive after first connection
             if (udp != null)
                 udp.Close();
@@ -105,12 +110,13 @@ namespace AutoRPi
                 connectedRPi = rpiName;
                 SetConnectionLabel($"Connected to '{connectedRPi}'", connectedColor);
                 DisplayAlert("Connected", tcpEnd.ToString(), "OK");
-                return;
+                return true;
             }
 
             connectedRPi = string.Empty;
             SetConnectionLabel("Not Connected", disconnectedColor);
             DisplayAlert($"Failed to connect", $"Could not connect to '{rpiName}'", "OK");
+            return false;
         }
 
         void Send(RPiCmds cmd)
@@ -128,6 +134,7 @@ namespace AutoRPi
             try
             {
                 ns.Write(b, 0, b.Length);
+                ns.Flush();
             }
 
             catch (System.Exception)
@@ -136,8 +143,28 @@ namespace AutoRPi
                 SetConnectionLabel("Not Connected", disconnectedColor);
                 return;
             }
+        }
 
-            ns.Flush();
+        string Receive()
+        {
+            byte[] msg = new byte[1];
+            try
+            {
+                var result = ns.BeginRead(msg, 0, msg.Length, null, ns);
+                result.AsyncWaitHandle.WaitOne(250);
+                ns.EndRead(result);
+
+                string s = GetString(msg);
+                if (s == string.Empty)
+                    return "ERROR";
+                return s;
+            }
+
+            catch (System.Exception)
+            {
+            }
+
+            return "ERROR";
         }
 
         void SetConnectionLabel(string msg, Color c)
@@ -231,16 +258,48 @@ namespace AutoRPi
                 tcpClient.Close();
             }
 
-            ConnectToRPi();
+            if (ConnectToRPi())
+                UpdateDeviceStates();
+        }
+
+        void UpdateDeviceStates()
+        {
+            for (int i = deviceContentOffset; i < stackLayout.Children.Count; i++)
+            {
+                DeviceContentView dcv = (DeviceContentView)stackLayout.Children[i];
+                dcv.SetSwitchState(GetPinState(dcv.pin));
+            }
         }
 
         public void SwitchToggled(int pin, bool on)
         {
-            string cmd = pin + (on ? "1" : "0");
-            if (cmd.Length < 3)
-                cmd.Insert(0, "0");
+            SetPinState(pin, on);
+        }
+
+        void SetPinState(int pin, bool on)
+        {
+            string cmd = "s" + pin + (on ? "1" : "0");
+            if (cmd.Length < 4)
+                cmd = cmd.Insert(1, "0");
 
             Send(cmd);
+        }
+
+        bool GetPinState(int pin)
+        {
+            //Request pin state
+            string cmd = "g" + pin;
+            if (cmd.Length < 3)
+                cmd = cmd.Insert(1, "0");
+
+            Send(cmd);
+
+            //Get reply
+            string msg = Receive();
+            if (msg != "ERROR")
+                return msg == "0" ? false : true;
+
+            return false;
         }
 
         public void EditBtnClicked(string name, int pin, DeviceContentView dcv)

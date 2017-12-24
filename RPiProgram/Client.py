@@ -1,5 +1,6 @@
 import threading
 import socket
+import RPi.GPIO as GPIO
 from time import sleep
 
 class Client (object):
@@ -9,7 +10,7 @@ class Client (object):
     ip = None
     done = False
 
-    def __init__(self, sock, ip):
+    def __init__(self, sock, ip, pins):
         self.sock = sock
         self.ip = ip
 
@@ -40,6 +41,21 @@ class Client (object):
     def RefreshSocketStates(self):
         print("ASDASD")
 
+    def SetCmd(self, cmd):
+        pin = int(cmd[0:2])
+        state = int(cmd[2])
+        GPIO.output(pin, state)
+
+    def GetCmd(self, cmd):
+        pin = int(cmd)
+        state = GPIO.input(pin)
+
+        try:
+            self.sock.send(str(state).encode('ascii'))
+            print("SENT: " + str(state).encode('ascii'))
+        except socket.error:
+            done = True
+
     def HandleConnection(self):
         print("Waiting for '" + self.ip + "'" + " to connect...")
         if not self.EstablishConnection():
@@ -53,6 +69,8 @@ class Client (object):
 
             cmd = cmd.decode('ascii')
             print("Received: " + cmd)
-            
-            if cmd == "0": self.CloseConnection()
-            if cmd == "1": self.RefreshSocketStates()
+            if cmd == "": pass
+            elif cmd == "0": self.CloseConnection()
+            elif cmd == "1": self.RefreshSocketStates()
+            elif cmd[0] == "s": self.SetCmd(cmd[1:])
+            elif cmd[0] == "g": self.GetCmd(cmd[1:])

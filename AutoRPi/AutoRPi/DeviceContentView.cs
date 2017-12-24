@@ -67,5 +67,10 @@ namespace AutoRPi
                 }
             );
         }
+
+        public void SetSwitchState(bool on)
+        {
+            pinSwitch.IsToggled = on;
+        }
     }
 }
