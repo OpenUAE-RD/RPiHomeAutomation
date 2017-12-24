@@ -54,6 +54,8 @@ namespace AutoRPi
             if (rpiPicker.SelectedItem == null)
                 return false;
 
+            SetConnectionLabel("Connecting...", connectingColor);
+
             //HACK: For some reason if this is not done udp will not receive after first connection
             if (udp != null)
                 udp.Close();
@@ -109,7 +111,7 @@ namespace AutoRPi
 
                 connectedRPi = rpiName;
                 SetConnectionLabel($"Connected to '{connectedRPi}'", connectedColor);
-                DisplayAlert("Connected", tcpEnd.ToString(), "OK");
+                DisplayAlert("Connected", $"Sucessfully connected to '{rpiName}'", "OK");
                 return true;
             }
 
