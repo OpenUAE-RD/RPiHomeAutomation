@@ -4,8 +4,8 @@ namespace AutoRPi
 {
     public class DeviceContentView : ContentView
     {
-        string name;
-        int pin;
+        public string name { get; private set; }
+        public int pin { get; private set; }
         Button edit, delete;
         Switch pinSwitch;
         MainPage mainPg;
@@ -54,6 +54,7 @@ namespace AutoRPi
                 new StackLayout()
                 {
                     Orientation = StackOrientation.Horizontal,
+                    HorizontalOptions = LayoutOptions.Center,
                     Children =
                     {
                         new Label() { Text = $"{name} on pin: {pin}", HorizontalOptions = LayoutOptions.FillAndExpand, VerticalOptions = LayoutOptions.Center,

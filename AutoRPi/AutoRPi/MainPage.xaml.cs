@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Net.Sockets;
 using System.Collections.Generic;
+using System.IO;
 using Xamarin.Forms;
 
 namespace AutoRPi
@@ -12,8 +13,12 @@ namespace AutoRPi
         IPEndPoint udpEnd, tcpEnd;
         NetworkStream ns;
         IPAddress[] localIps;
-        int udpPort = 20253;
 
+        const int udpPort = 20253;
+        readonly Color connectedColor = Color.Green, disconnectedColor = Color.Red, connectingColor = Color.Blue;
+        readonly string saveDir = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal);
+        const string ext = ".rha";
+        const int deviceContentOffset = 2;
         string connectedRPi = string.Empty;
 
         public MainPage()
@@ -25,8 +30,9 @@ namespace AutoRPi
             localIps = Dns.GetHostAddresses(Dns.GetHostName());
 
             rpiPicker.SelectedItem = null;
-            rpiPicker.Items.Add("y tho");
-            rpiPicker.Items.Add("rpi");
+            PopulateRPiPicker();
+            //rpiPicker.Items.Add("y tho");
+            //rpiPicker.Items.Add("rpi");
         }
 
         bool IsOwnIp(IPAddress ip)
@@ -96,13 +102,13 @@ namespace AutoRPi
                 ns.WriteTimeout = 2;
 
                 connectedRPi = rpiName;
-                UpdateConnectionStatus();
+                SetConnectionLabel($"Connected to '{connectedRPi}'", connectedColor);
                 DisplayAlert("Connected", tcpEnd.ToString(), "OK");
                 return;
             }
 
             connectedRPi = string.Empty;
-            UpdateConnectionStatus();
+            SetConnectionLabel("Not Connected", disconnectedColor);
             DisplayAlert($"Failed to connect", $"Could not connect to '{rpiName}'", "OK");
         }
 
@@ -126,26 +132,17 @@ namespace AutoRPi
             catch (System.Exception)
             {
                 connectedRPi = string.Empty;
-                UpdateConnectionStatus();
+                SetConnectionLabel("Not Connected", disconnectedColor);
                 return;
             }
 
             ns.Flush();
         }
 
-        void UpdateConnectionStatus()
+        void SetConnectionLabel(string msg, Color c)
         {
-            if (connectedRPi == string.Empty)
-            {
-                connectionLabel.Text = "Not Connected";
-                connectionLabel.TextColor = Color.Red;
-            }
-
-            else
-            {
-                connectionLabel.Text = $"Connected to '{connectedRPi}'";
-                connectionLabel.TextColor = Color.Green;
-            }
+            connectionLabel.Text = msg;
+            connectionLabel.TextColor = c;
         }
 
         string GetString(byte[] bytes)
@@ -159,7 +156,7 @@ namespace AutoRPi
         }
 
         #region Click events
-        void ConnectBtn_Clicked(object sender, System.EventArgs e)
+        void ConnectBtnClicked(object sender, System.EventArgs e)
         {
             //Ignore if trying to connect current rpi
             if (rpiPicker.SelectedItem == null || connectedRPi == rpiPicker.SelectedItem.ToString())
@@ -176,34 +173,25 @@ namespace AutoRPi
 
         void AddDeviceClicked(object sender, System.EventArgs e)
         {
+            if (rpiPicker.SelectedItem == null)
+            {
+                DisplayAlert("Error", "Please select a RPi to add to.", "OK");
+                return;
+            }
+
             var a = new AddDevicePg();
             a.Disappearing += AddDevicePgDisappearing;
             Navigation.PushAsync(a, true);
         }
 
-        void AddDevicePgDisappearing(object sender, System.EventArgs e)
-        {
-            AddDevicePg adp = (AddDevicePg)sender;
-
-            if (adp.WasSuccessful())
-                AddDevice(adp.GetDeviceName(), adp.GetPin());
-        }
-
         void AddRPiClicked(object sender, System.EventArgs e)
         {
-            AddRPiPg arp = new AddRPiPg();
-            arp.rpiAddedCallback = AddRPiName;
-            Navigation.PushAsync(arp, true);
-        }
-
-        void AddRPiName(string name)
-        {
-            rpiPicker.Items.Add(name);
+            Navigation.PushAsync(new AddRPiPg { rpiAddedCallback = AddRPiName }, true);
         }
 
         void AboutClicked(object sender, System.EventArgs e)
         {
-
+            DisplayAlert("About", "Raspberry Pi Home Automation\n\nBy: OpenUAE R&D Group\n\nVersion: 1.0", "Close");
         }
 
         public void SwitchToggled(int pin, bool on)
@@ -215,20 +203,130 @@ namespace AutoRPi
             Send(cmd);
         }
 
+        void DeleteRPiBtn(object sender, System.EventArgs e)
+        {
+            if (rpiPicker.SelectedItem == null)
+            {
+                DisplayAlert("Error", "Please select a RPi to remove.", "OK");
+                return;
+            }
+
+            if (DisplayAlert("Are you sure?", "This action is NOT reversable. Continue?", "Yes", "No").Result)
+            {
+                //Delete save file
+                string path = Path.Combine(saveDir, rpiPicker.SelectedItem.ToString()) + ext;
+                if (File.Exists(path))
+                {
+                    File.Delete(path);
+                    DisplayAlert("DELETED!!!", "", "OK");
+                }
+
+                rpiPicker.Items.RemoveAt(rpiPicker.SelectedIndex);
+            }
+        }
+
         public void EditBtnClicked(string name, int pin, DeviceContentView dcv)
         {
-            Navigation.PushAsync(new AddDevicePg(name, pin, dcv), true);
+            var a = new AddDevicePg(name, pin, dcv);
+            a.Disappearing += DeviceFinishedEditing;
+            Navigation.PushAsync(a, true);
         }
 
         public void DeleteBtnClicked(DeviceContentView dcv)
         {
             stackLayout.Children.Remove(dcv);
+            Save();
         }
         #endregion
 
-        void AddDevice(string name, int pin)
+        void AddRPiName(string name)
+        {
+            rpiPicker.Items.Add(name);
+            File.Create(Path.Combine(saveDir, name) + ext);
+        }
+
+        void AddDeviceContent(string name, int pin, bool save = true)
         {
             stackLayout.Children.Add(new DeviceContentView(name, pin, this));
+
+            if (save)
+                Save();
+        }
+
+        void AddDevicePgDisappearing(object sender, System.EventArgs e)
+        {
+            AddDevicePg adp = (AddDevicePg)sender;
+
+            if (adp.WasSuccessful())
+                AddDeviceContent(adp.GetDeviceName(), adp.GetPin());
+        }
+
+        void DeviceFinishedEditing(object sender, System.EventArgs e)
+        {
+            Save();
+        }
+
+        /// <summary>
+        /// Saves the Device content data of the current rpi
+        /// </summary>
+        void Save()
+        {
+            if (rpiPicker.SelectedItem == null)
+                return;
+
+            //Overwrite file with current data
+            using (StreamWriter sw = new StreamWriter(Path.Combine(saveDir, rpiPicker.SelectedItem.ToString()) + ext))
+            {
+                DeviceContentView dcv = null;
+                for (int i = deviceContentOffset; i < stackLayout.Children.Count; i++)
+                {
+                    dcv = (DeviceContentView)stackLayout.Children[i];
+                    sw.WriteLine($"{dcv.name} {dcv.pin}");
+                }
+            }
+        }
+
+        void RpiPickerIndexChanged(object sender, System.EventArgs e)
+        {
+            ClearDeviceContentViews();
+            if (rpiPicker.Items.Count == 0)
+                return;
+
+            Load();
+        }
+
+        void Load()
+        {
+            if (rpiPicker.SelectedItem == null)
+                return;
+
+            using (StreamReader sr = new StreamReader(Path.Combine(saveDir, rpiPicker.SelectedItem.ToString()) + ext))
+            {
+                while (!sr.EndOfStream)
+                {
+                    string[] info = sr.ReadLine().Split(' ');
+                    AddDeviceContent(info[0], int.Parse(info[1]), false);
+                }
+            }
+        }
+
+        void PopulateRPiPicker()
+        {
+            string[] files = Directory.GetFiles(saveDir);
+            for (int i = 0; i < files.Length; i++)
+                rpiPicker.Items.Add(Path.GetFileNameWithoutExtension(files[i]));
+        }
+
+        void ClearDeviceContentViews()
+        {
+            //Keep only the main elements and remove all device content of current rpi
+            View[] a = new View[deviceContentOffset];
+            for (int i = 0; i < deviceContentOffset; i++)
+                a[i] = stackLayout.Children[i];
+
+            stackLayout.Children.Clear();
+            for (int i = 0; i < deviceContentOffset; i++)
+                stackLayout.Children.Add(a[i]);
         }
     }
 }

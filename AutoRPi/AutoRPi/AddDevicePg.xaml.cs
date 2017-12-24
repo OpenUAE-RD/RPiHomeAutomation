@@ -53,8 +53,8 @@ namespace AutoRPi
 
             success = true;
 
-            //If we are updating then update the device content(Extra checks to fix small alignment bug)
-            if (dcv != null && startName != GetDeviceName() && startPin != GetPin())
+            //If we are updating then update the device content
+            if (dcv != null && (startName != GetDeviceName() || startPin != GetPin()))
                 dcv.Update(GetDeviceName(), GetPin());
 
             Navigation.PopAsync(true);
