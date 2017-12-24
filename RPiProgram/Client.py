@@ -38,9 +38,6 @@ class Client (object):
         self.done = True
         print("Connection with " + str(self.ip) + " terminated normally.")
 
-    def RefreshSocketStates(self):
-        print("ASDASD")
-
     def SetCmd(self, cmd):
         pin = int(cmd[0:2])
         state = int(cmd[2])
@@ -52,7 +49,6 @@ class Client (object):
 
         try:
             self.sock.send(str(state).encode('ascii'))
-            print("SENT: " + str(state).encode('ascii'))
         except socket.error:
             done = True
 
@@ -68,9 +64,7 @@ class Client (object):
             cmd = self.sock.recv(1024)
 
             cmd = cmd.decode('ascii')
-            print("Received: " + cmd)
             if cmd == "": pass
             elif cmd == "0": self.CloseConnection()
-            elif cmd == "1": self.RefreshSocketStates()
             elif cmd[0] == "s": self.SetCmd(cmd[1:])
             elif cmd[0] == "g": self.GetCmd(cmd[1:])
