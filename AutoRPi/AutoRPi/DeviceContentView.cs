@@ -57,7 +57,7 @@ namespace AutoRPi
                     HorizontalOptions = LayoutOptions.Center,
                     Children =
                     {
-                        new Label() { Text = $"{name} on pin: {pin}", HorizontalOptions = LayoutOptions.FillAndExpand, VerticalOptions = LayoutOptions.Center,
+                        new Label() { Text = $"'{name}' on pin: {pin}", HorizontalOptions = LayoutOptions.FillAndExpand, VerticalOptions = LayoutOptions.Center,
                             VerticalTextAlignment = TextAlignment.Center, HorizontalTextAlignment = TextAlignment.Center,
                         TextColor = Color.Black, FontSize = Device.GetNamedSize(NamedSize.Default, typeof(Label))},
                         pinSwitch,

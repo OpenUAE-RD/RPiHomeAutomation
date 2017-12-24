@@ -8,6 +8,7 @@ namespace AutoRPi
 {
     public partial class MainPage : ContentPage
     {
+        //TODO: Cleanup the way commands are handled
         UdpClient udp;
         TcpClient tcpClient;
         IPEndPoint udpEnd, tcpEnd;
@@ -155,6 +156,68 @@ namespace AutoRPi
             return System.Text.Encoding.ASCII.GetBytes(s);
         }
 
+        #region Toolbar events
+        void AddRPiClicked(object sender, System.EventArgs e)
+        {
+            Navigation.PushAsync(new AddRPiPg(rpiPicker.Items) { rpiAddedCallback = AddRPiCallback }, true);
+        }
+
+        void AddDeviceClicked(object sender, System.EventArgs e)
+        {
+            if (rpiPicker.SelectedItem == null)
+            {
+                DisplayAlert("Error", "Please select a RPi to add to.", "OK");
+                return;
+            }
+
+            var a = new AddDevicePg();
+            a.Disappearing += AddDevicePgDisappearing;
+            Navigation.PushAsync(a, true);
+        }
+
+        void ChangeRPiNameClicked(object sender, System.EventArgs e)
+        {
+            if (rpiPicker.SelectedItem == null)
+            {
+                DisplayAlert("Error", "Please select a RPi first.", "OK");
+                return;
+            }
+
+            Navigation.PushAsync(new AddRPiPg(rpiPicker.Items, rpiPicker.SelectedItem.ToString()) { rpiAddedCallback = AddRPiCallback }, true);
+        }
+
+        async void DeleteRPiClicked(object sender, System.EventArgs e)
+        {
+            if (rpiPicker.SelectedItem == null)
+            {
+                await DisplayAlert("Error", "Please select a RPi to remove.", "OK");
+                return;
+            }
+
+            //Delete save file
+            if ((await DisplayAlert("Are you sure?", "This action is NOT reversable. Continue?", "Yes", "No")))
+            {
+                string path = Path.Combine(saveDir, rpiPicker.SelectedItem.ToString()) + ext;
+                if (File.Exists(path))
+                    File.Delete(path);
+
+                int i = rpiPicker.SelectedIndex;
+                rpiPicker.SelectedItem = null;
+                rpiPicker.Items.RemoveAt(i);
+
+                Send(RPiCmds.ClosePort);
+                if (tcpClient != null)
+                    tcpClient.Close();
+                SetConnectionLabel("Not Connected", Color.Red);
+            }
+        }
+
+        void AboutClicked(object sender, System.EventArgs e)
+        {
+            DisplayAlert("About", "Raspberry Pi Home Automation\n\nBy: OpenUAE R&D Group\n\nVersion: 1.0", "Close");
+        }
+        #endregion
+
         #region Click events
         void ConnectBtnClicked(object sender, System.EventArgs e)
         {
@@ -171,29 +234,6 @@ namespace AutoRPi
             ConnectToRPi();
         }
 
-        void AddDeviceClicked(object sender, System.EventArgs e)
-        {
-            if (rpiPicker.SelectedItem == null)
-            {
-                DisplayAlert("Error", "Please select a RPi to add to.", "OK");
-                return;
-            }
-
-            var a = new AddDevicePg();
-            a.Disappearing += AddDevicePgDisappearing;
-            Navigation.PushAsync(a, true);
-        }
-
-        void AddRPiClicked(object sender, System.EventArgs e)
-        {
-            Navigation.PushAsync(new AddRPiPg { rpiAddedCallback = AddRPiName }, true);
-        }
-
-        void AboutClicked(object sender, System.EventArgs e)
-        {
-            DisplayAlert("About", "Raspberry Pi Home Automation\n\nBy: OpenUAE R&D Group\n\nVersion: 1.0", "Close");
-        }
-
         public void SwitchToggled(int pin, bool on)
         {
             string cmd = pin + (on ? "1" : "0");
@@ -203,32 +243,10 @@ namespace AutoRPi
             Send(cmd);
         }
 
-        void DeleteRPiBtn(object sender, System.EventArgs e)
-        {
-            if (rpiPicker.SelectedItem == null)
-            {
-                DisplayAlert("Error", "Please select a RPi to remove.", "OK");
-                return;
-            }
-
-            if (DisplayAlert("Are you sure?", "This action is NOT reversable. Continue?", "Yes", "No").Result)
-            {
-                //Delete save file
-                string path = Path.Combine(saveDir, rpiPicker.SelectedItem.ToString()) + ext;
-                if (File.Exists(path))
-                {
-                    File.Delete(path);
-                    DisplayAlert("DELETED!!!", "", "OK");
-                }
-
-                rpiPicker.Items.RemoveAt(rpiPicker.SelectedIndex);
-            }
-        }
-
         public void EditBtnClicked(string name, int pin, DeviceContentView dcv)
         {
             var a = new AddDevicePg(name, pin, dcv);
-            a.Disappearing += DeviceFinishedEditing;
+            a.Disappearing += DeviceContentFinishedEditing;
             Navigation.PushAsync(a, true);
         }
 
@@ -239,10 +257,32 @@ namespace AutoRPi
         }
         #endregion
 
-        void AddRPiName(string name)
+        /// <summary>
+        /// Handles adding a RPi or changing its name
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="update"></param>
+        void AddRPiCallback(string name, bool update)
         {
-            rpiPicker.Items.Add(name);
-            File.Create(Path.Combine(saveDir, name) + ext);
+            string newFile = Path.Combine(saveDir, name) + ext;
+            File.Create(newFile).Close();
+
+            //If we are changing the name then copy the saved data over and delete the old file
+            if (update)
+            {
+                File.Replace(Path.Combine(saveDir, rpiPicker.SelectedItem.ToString()) + ext, newFile, null);
+                rpiPicker.Items[rpiPicker.SelectedIndex] = name;
+
+                Send(RPiCmds.ClosePort);
+                if (tcpClient != null)
+                    tcpClient.Close();
+                SetConnectionLabel("Not Connected", Color.Red);
+            }
+
+            else
+            {
+                rpiPicker.Items.Add(name);
+            }
         }
 
         void AddDeviceContent(string name, int pin, bool save = true)
@@ -261,7 +301,7 @@ namespace AutoRPi
                 AddDeviceContent(adp.GetDeviceName(), adp.GetPin());
         }
 
-        void DeviceFinishedEditing(object sender, System.EventArgs e)
+        void DeviceContentFinishedEditing(object sender, System.EventArgs e)
         {
             Save();
         }
@@ -286,15 +326,6 @@ namespace AutoRPi
             }
         }
 
-        void RpiPickerIndexChanged(object sender, System.EventArgs e)
-        {
-            ClearDeviceContentViews();
-            if (rpiPicker.Items.Count == 0)
-                return;
-
-            Load();
-        }
-
         void Load()
         {
             if (rpiPicker.SelectedItem == null)
@@ -310,6 +341,18 @@ namespace AutoRPi
             }
         }
 
+        void RpiPickerIndexChanged(object sender, System.EventArgs e)
+        {
+            ClearDeviceContentViews();
+            if (rpiPicker.Items.Count == 0)
+                return;
+
+            Load();
+        }
+
+        /// <summary>
+        /// Fills RPi picker with saved RPi names
+        /// </summary>
         void PopulateRPiPicker()
         {
             string[] files = Directory.GetFiles(saveDir);
@@ -317,6 +360,9 @@ namespace AutoRPi
                 rpiPicker.Items.Add(Path.GetFileNameWithoutExtension(files[i]));
         }
 
+        /// <summary>
+        /// Removes all device contents from page
+        /// </summary>
         void ClearDeviceContentViews()
         {
             //Keep only the main elements and remove all device content of current rpi

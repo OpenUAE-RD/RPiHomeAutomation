@@ -6,8 +6,9 @@
 
     <ContentPage.ToolbarItems>
         <ToolbarItem Text="Add Raspberry Pi" Order="Secondary" Clicked="AddRPiClicked"/>
+        <ToolbarItem Text="Change Raspberry Pi Name" Order="Secondary" Clicked="ChangeRPiNameClicked"/>
         <ToolbarItem Text="Add Device" Order="Secondary" Clicked="AddDeviceClicked"/>
-        <ToolbarItem Text="Delete Raspberry Pi" Order="Secondary" Clicked="DeleteRPiBtn"/>
+        <ToolbarItem Text="Delete Raspberry Pi" Order="Secondary" Clicked="DeleteRPiClicked"/>
         <ToolbarItem Text="About" Order="Secondary" Clicked="AboutClicked"/>
     </ContentPage.ToolbarItems>
 

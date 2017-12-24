@@ -15,6 +15,12 @@ namespace AutoRPi
         string startName = "";
         int startPin = -1;
 
+        /// <summary>
+        /// Pass parameters when an existing object is being edited. Button text will adjust accordingly
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="pin"></param>
+        /// <param name="dcv"></param>
         public AddDevicePg(string name = "", int pin = -1, DeviceContentView dcv = null)
         {
             InitializeComponent();
@@ -32,6 +38,7 @@ namespace AutoRPi
 
             picker.ItemsSource = pins;
             picker.SelectedIndex = pin <= -1 ? -1 : pin - 1;
+            btn.Text = dcv == null ? btn.Text : "Update Device";
         }
 
         void AddDeviceBtn_Clicked(object sender, EventArgs e)
@@ -67,7 +74,7 @@ namespace AutoRPi
 
         public string GetDeviceName()
         {
-            return deviceNameEntry.Text.Trim();
+            return deviceNameEntry.Text.Trim().Replace(' ', '_');
         }
 
         public int GetPin()
