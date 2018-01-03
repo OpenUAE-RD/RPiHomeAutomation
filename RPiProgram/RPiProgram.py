@@ -12,7 +12,8 @@ GPIO.setup(pins, GPIO.OUT, initial = GPIO.LOW)
 
 udp_port = 20253
 host = socket.gethostname();
-print("Hostname: " + str(host))
+host = str(host)
+print("Hostname: " + host)
 
 #Setup socket
 udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -24,7 +25,7 @@ while True:
     print("\nGot: '" + data + "' from " + str(addr))
     
     #If device wants to connect to us
-    if 'rpi' == data:
+    if host == data:
         #Create a socket and send a port to form TCP over
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.bind(('', 0))
